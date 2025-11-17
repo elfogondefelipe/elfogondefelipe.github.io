@@ -1,31 +1,5 @@
 // app.js - Demo frontend con persistencia en localStorage
-// Modificado: contraseñas individuales, gráfica con Chart.js, filtro por categoría, iconos mínimos.
-
-/* ---------- CONTRASEÑAS INDIVIDUALES ---------- */
-/* Aquí puedes cambiar contraseñas a mano para cada usuario. */
-const passwords = {
-  "Emmanuel": "passwo501",      // notación: Emanuel con doble M
-  "Juan Manuel": "JUANMANUEl",
-  "Ana María": "ANAMARÍa",
-  "Ana Pau": "ANAPAu",
-  "Elías": "ELÍAs",
-  "Pablo": "PABLo",
-  "Mariana": "MARIANa",
-  "Juan": "carrito"
-
-};
-
-/* ---------- Usuarios por defecto (misma lista original) ---------- */
-const defaultUsers = [
-  "Emmanuel",
-  "Juan Manuel",
-  "Ana María",
-  "Ana Pau",
-  "Elías",
-  "Pablo",
-  "Mariana",
-  "Juan"
-];
+// Modificado para abrir directo dashboard con usuario fijo "defaultUser"
 
 /* ---------- Mapping íconos por categoría (texto simple / unicode) ---------- */
 const categoryIcon = {
@@ -50,18 +24,12 @@ const money = n => {
 const todayISO = () => new Date().toISOString().slice(0,10);
 
 /* ---------- Estado ---------- */
-let currentUser = null;
+const currentUser = "Money App";  // usuario fijo
+
 let chartInstance = null;
 
 /* ---------- DOM ---------- */
-const usersListEl = qs('#usersList');
-const passwordPanel = qs('#passwordPanel');
-const selectedNameEl = qs('#selectedName');
-const passwordInput = qs('#passwordInput');
-const loginBtn = qs('#loginBtn');
-const cancelSelect = qs('#cancelSelect');
-const loginError = qs('#loginError');
-
+// No necesitamos usuarios ni login, así que omitimos esos elementos
 const loginScreen = qs('#login-screen');
 const dashboardScreen = qs('#dashboard-screen');
 const userTitle = qs('#userTitle');
@@ -123,63 +91,18 @@ function saveData(user, data){
   localStorage.setItem(key, JSON.stringify(data));
 }
 
-/* ---------- Render pantalla login ---------- */
-function renderUsers(){
-  usersListEl.innerHTML = '';
-  defaultUsers.forEach(name => {
-    const card = document.createElement('div');
-    card.className = 'user-card';
-    card.tabIndex = 0;
-    card.innerHTML = `<div class="user-name">${name}</div><div class="user-sub">Acceder</div>`;
-    card.addEventListener('click', ()=> selectUser(name));
-    card.addEventListener('keypress', (e)=> { if(e.key==='Enter') selectUser(name); });
-    usersListEl.appendChild(card);
-  });
-}
-
-function selectUser(name){
-  selectedNameEl.textContent = name;
-  passwordInput.value = '';
-  loginError.classList.add('hidden');
-  passwordPanel.classList.remove('hidden');
-  passwordInput.focus();
-  passwordPanel.dataset.selected = name;
-}
-
-/* ---------- Login ---------- */
-loginBtn.addEventListener('click', attemptLogin);
-passwordInput.addEventListener('keypress', (e)=> { if(e.key === 'Enter') attemptLogin(); });
-cancelSelect.addEventListener('click', ()=> passwordPanel.classList.add('hidden'));
-
-function attemptLogin(){
-  const name = passwordPanel.dataset.selected;
-  if(!name) return;
-  const expected = passwords[name] || ''; // contraseña desde objeto
-  const entered = passwordInput.value.trim();
-  if(entered === expected){
-    loginError.classList.add('hidden');
-    openDashboard(name);
-    passwordPanel.classList.add('hidden');
-  } else {
-    loginError.classList.remove('hidden');
-  }
-}
-
 /* ---------- Dashboard ---------- */
 function openDashboard(user){
-  currentUser = user;
   userTitle.textContent = `${user}`;
-  loginScreen.classList.add('hidden');
-  dashboardScreen.classList.remove('hidden');
+  if(loginScreen) loginScreen.classList.add('hidden');
+  if(dashboardScreen) dashboardScreen.classList.remove('hidden');
 
-  loadData(user); // inicializa si hace falta
   renderAll();
 }
 
 logoutBtn.addEventListener('click', ()=>{
-  currentUser = null;
-  dashboardScreen.classList.add('hidden');
-  loginScreen.classList.remove('hidden');
+  // En este modo, al hacer logout solo recarga la página para reiniciar
+  location.reload();
 });
 
 /* ---------- Render completo ---------- */
@@ -240,15 +163,11 @@ function populateAccountSelect(accounts){
 
 txForm.addEventListener('submit', (e)=>{
   e.preventDefault();
-  if(!currentUser) return alert('No hay usuario activo');
   const amountVal = parseFloat(txAmount.value);
   if(isNaN(amountVal) || amountVal <= 0) return alert('Ingresa un monto válido');
 
-  // --------- CAMBIO PARA GUARDAR FECHA + HORA ----------
-  // Si se ingresa solo fecha, le ponemos hora actual para que quede fecha completa
   let txDateTime = txDate.value ? new Date(txDate.value + 'T' + new Date().toTimeString().slice(0,8)) : new Date();
   const isoDateTime = txDateTime.toISOString();
-  // -----------------------------------------------------
 
   const tx = {
     id: 'tx_' + Date.now(),
@@ -256,7 +175,7 @@ txForm.addEventListener('submit', (e)=>{
     amount: Number(amountVal.toFixed(2)),
     category: txCategory.value,
     accountId: txAccountSelect.value,
-    date: isoDateTime,  // <-- fecha completa con hora
+    date: isoDateTime,
     note: txNote.value || ''
   };
   const data = loadData(currentUser);
@@ -284,7 +203,7 @@ function recalcAndRender(data){
   totalGastosEl.textContent = money(gastos);
 }
 
-/* ---------- Render transacciones (aplica filtros) ---------- */
+/* ---------- Render transacciones ---------- */
 function renderTxList(txArr){
   let arr = txArr.slice();
   const typeF = filterType.value;
@@ -296,7 +215,6 @@ function renderTxList(txArr){
   if(from) arr = arr.filter(t=>t.date >= from);
   if(to) arr = arr.filter(t=>t.date <= to);
 
-  // --------- ORDENAR CRONOLÓGICAMENTE (DE MÁS ANTIGUO A MÁS RECIENTE) ----------
   arr.sort((a,b) => new Date(a.date) - new Date(b.date));
 
   txListEl.innerHTML = '';
@@ -309,7 +227,6 @@ function renderTxList(txArr){
     li.className = 'tx-item';
     const icon = categoryIcon[t.category] ? `<span class="cat-icon">${categoryIcon[t.category]}</span>` : `<span class="cat-icon">•</span>`;
 
-    // Mostrar solo fecha (sin hora) para claridad
     const fechaSimple = new Date(t.date).toISOString().slice(0,10);
 
     li.innerHTML = `
@@ -394,7 +311,6 @@ clearFiltersBtn.addEventListener('click', ()=>{
 function updateChart(){
   if(!currentUser) return;
   const data = loadData(currentUser);
-  // filtrar por rango y categoría
   const range = chartRange.value;
   const cat = chartCategory.value;
 
@@ -402,7 +318,6 @@ function updateChart(){
   const filtered = data.tx.filter(t=>{
     if(cat !== 'all' && t.category !== cat) return false;
 
-    // Aquí parseamos correctamente la fecha completa con hora
     const d = new Date(t.date);
 
     if(range === 'day') return d.toDateString() === now.toDateString();
@@ -412,17 +327,14 @@ function updateChart(){
     return true;
   });
 
-  // ordenar asc por fecha completa (de más antiguo a más reciente)
   filtered.sort((a,b)=> new Date(a.date) - new Date(b.date));
 
-  // calcular valores acumulados
   let cumulative = 0;
   const labels = [];
   const values = [];
   filtered.forEach(t => {
     const val = (t.type === 'ingreso' ? t.amount : -t.amount);
     cumulative += val;
-    // Mostrar solo fecha YYYY-MM-DD en etiquetas para mejor legibilidad
     labels.push(t.date.slice(0,10));
     values.push(Number(cumulative.toFixed(2)));
   });
@@ -480,8 +392,6 @@ function updateChart(){
   });
 }
 
-
-/* actualizar el gráfico si cambian controles */
 chartRange.addEventListener('change', updateChart);
 chartCategory.addEventListener('change', updateChart);
 
@@ -494,9 +404,6 @@ function getAccountName(id){
 
 /* ---------- Inicialización ---------- */
 (function init(){
-  renderUsers();
-  console.log('Usuarios y contraseñas (edítalas en app.js -> passwords):');
-  defaultUsers.forEach(n => console.log(n, '→', passwords[n] || '(no definida)'));
-
+  // Saltamos renderUsers y login
+  openDashboard(currentUser);
 })();
-
