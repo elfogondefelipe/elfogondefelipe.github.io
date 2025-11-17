@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Finanzas - Demo</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Página contenedor -->
+  <div id="app">
+
+    <!-- LOGIN / Home -->
+    <main id="login-screen" class="screen">
+      <h1 class="brand">Mi Finanzas</h1>
+      <p class="subtitle">Selecciona tu usuario</p>
+
+      <section class="users-grid" id="usersList">
+        <!-- JS poblara esta lista con tarjetas -->
+      </section>
+
+      <!-- panel de contraseña (oculto hasta seleccionar usuario) -->
+      <div id="passwordPanel" class="password-panel hidden">
+        <h3 id="selectedName"></h3>
+        <input id="passwordInput" type="password" placeholder="Ingresa la contraseña" autocomplete="off" />
+        <div class="row">
+          <button id="loginBtn" class="btn primary">Entrar</button>
+          <button id="cancelSelect" class="btn ghost">Cancelar</button>
+        </div>
+        <p id="loginError" class="error hidden">Contraseña incorrecta. Intenta de nuevo.</p>
+      </div>
+
+      <footer class="footer-note">
+        Versión demo — datos guardados localmente
+      </footer>
+    </main>
+
+    <!-- DASHBOARD -->
+    <main id="dashboard-screen" class="screen hidden">
+      <header class="header">
+        <div class="brand-left">
+          <h2 id="userTitle">Usuario</h2>
+          <p id="userSubtitle" class="muted">Resumen personal</p>
+        </div>
+        <div class="header-actions">
+          <button id="logoutBtn" class="btn ghost">Cerrar sesión</button>
+        </div>
+      </header>
+
+      <div class="container">
+        <!-- LEFT: Resumen y cuentas -->
+        <aside class="panel left-panel">
+          <div class="card summary-card">
+            <h4>Total</h4>
+            <div class="total-amount" id="totalBalance">$0.00</div>
+            <div class="mini-stats">
+              <div><span class="muted">Ingresos:</span> <strong id="totalIngresos">$0.00</strong></div>
+              <div><span class="muted">Gastos:</span> <strong id="totalGastos">$0.00</strong></div>
+            </div>
+          </div>
+
+          <div class="card accounts-card">
+            <div class="card-header">
+              <h4>Cuentas</h4>
+              <button id="addAccountBtn" class="btn small">+ Añadir</button>
+            </div>
+            <ul id="accountsList" class="accounts-list">
+              <!-- Lista de cuentas -->
+            </ul>
+          </div>
+        </aside>
+
+        <!-- CENTER: Formulario -->
+        <section class="panel center-panel">
+          <div class="card">
+            <h4>Agregar movimiento</h4>
+            <form id="txForm" autocomplete="off">
+              <div class="form-row">
+                <label>Tipo</label>
+                <div class="segmented">
+                  <button type="button" data-type="ingreso" class="seg-btn active">Ingreso</button>
+                  <button type="button" data-type="gasto" class="seg-btn">Gasto</button>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <label>Monto</label>
+                <input id="txAmount" type="number" step="0.01" min="0" placeholder="0.00" required />
+              </div>
+
+              <div class="form-row">
+                <label>Categoría</label>
+                <select id="txCategory">
+                  <option value="Sueldo" data-icon="salary">Sueldo</option>
+                  <option value="Comida" data-icon="food">Comida</option>
+                  <option value="Gasolina" data-icon="gas">Gasolina</option>
+                  <option value="Transporte" data-icon="transport">Transporte</option>
+                  <option value="Entretenimiento" data-icon="fun">Entretenimiento</option>
+                  <option value="Ahorro" data-icon="save">Ahorro</option>
+                  <option value="Salud" data-icon="health">Salud</option>
+                  <option value="Ropa" data-icon="clothes">Ropa</option>
+                  <option value="Otros" data-icon="other">Otros</option>
+                </select>
+              </div>
+
+              <div class="form-row">
+                <label>Cuenta</label>
+                <select id="txAccount"></select>
+              </div>
+
+              <div class="form-row">
+                <label>Fecha</label>
+                <input id="txDate" type="date" />
+              </div>
+
+              <div class="form-row">
+                <label>Nota</label>
+                <input id="txNote" type="text" placeholder="Opcional" />
+              </div>
+
+              <div class="form-row">
+                <button type="submit" class="btn primary full">Guardar movimiento</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h4>Historial</h4>
+            <div class="filters">
+              <select id="filterType">
+                <option value="all">Todo</option>
+                <option value="ingreso">Ingresos</option>
+                <option value="gasto">Gastos</option>
+              </select>
+
+              <select id="filterCategory">
+                <option value="all">Todas las categorías</option>
+                <option value="Sueldo">Sueldo</option>
+                <option value="Comida">Comida</option>
+                <option value="Gasolina">Gasolina</option>
+                <option value="Transporte">Transporte</option>
+                <option value="Entretenimiento">Entretenimiento</option>
+                <option value="Ahorro">Ahorro</option>
+                <option value="Salud">Salud</option>
+                <option value="Ropa">Ropa</option>
+                <option value="Otros">Otros</option>
+              </select>
+
+              <input id="filterFrom" type="date" />
+              <input id="filterTo" type="date" />
+              <button id="clearFilters" class="btn small ghost">Limpiar</button>
+            </div>
+
+            <ul id="txList" class="tx-list">
+              <!-- Transacciones -->
+            </ul>
+          </div>
+        </section>
+
+        <!-- RIGHT: análisis -->
+        <aside class="panel right-panel">
+          <div class="card">
+            <h4>Balances por cuenta</h4>
+            <ul id="balancesByAccount" class="simple-list"></ul>
+          </div>
+
+          <div class="card">
+            <h4>Resumen por categoría</h4>
+            <div id="categoriesSummary" class="categories-summary"></div>
+          </div>
+
+          <div class="card">
+            <h4>Gráfica de movimientos</h4>
+            <div class="chart-controls" style="display:flex; gap:8px; margin-bottom:8px;">
+              <select id="chartRange">
+                <option value="all">Todo</option>
+                <option value="day">Día</option>
+                <option value="week">Semana</option>
+                <option value="month">Mes</option>
+                <option value="year">Año</option>
+              </select>
+
+              <select id="chartCategory">
+                <option value="all">Todas</option>
+                <option value="Sueldo">Sueldo</option>
+                <option value="Comida">Comida</option>
+                <option value="Gasolina">Gasolina</option>
+                <option value="Transporte">Transporte</option>
+                <option value="Entretenimiento">Entretenimiento</option>
+                <option value="Ahorro">Ahorro</option>
+                <option value="Salud">Salud</option>
+                <option value="Ropa">Ropa</option>
+                <option value="Otros">Otros</option>
+              </select>
+            </div>
+            <canvas id="movementsChart" style="width:100%; height:220px;"></canvas>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
