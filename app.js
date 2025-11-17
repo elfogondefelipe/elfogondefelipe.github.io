@@ -4,7 +4,7 @@
 /* ---------- CONTRASEÑAS INDIVIDUALES ---------- */
 /* Aquí puedes cambiar contraseñas a mano para cada usuario. */
 const passwords = {
-  "Emmanuel": "EMMANUEl",      // notación: Emanuel con doble M
+  "Emmanuel": "passwo501",      // notación: Emanuel con doble M
   "Juan Manuel": "JUANMANUEl",
   "Ana María": "ANAMARÍa",
   "Ana Pau": "ANAPAu",
@@ -499,3 +499,4 @@ function getAccountName(id){
   defaultUsers.forEach(n => console.log(n, '→', passwords[n] || '(no definida)'));
 
 })();
+
