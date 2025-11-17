@@ -17,7 +17,7 @@ const passwords = {
 
 /* ---------- Usuarios por defecto (misma lista original) ---------- */
 const defaultUsers = [
-  "Emanuel",
+  "Emmanuel",
   "Juan Manuel",
   "Ana María",
   "Ana Pau",
@@ -497,4 +497,5 @@ function getAccountName(id){
   renderUsers();
   console.log('Usuarios y contraseñas (edítalas en app.js -> passwords):');
   defaultUsers.forEach(n => console.log(n, '→', passwords[n] || '(no definida)'));
+
 })();
